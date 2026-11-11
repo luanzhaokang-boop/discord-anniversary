@@ -2,42 +2,14 @@ name: Daily Anniversary Reminder
 
 on:
   schedule:
-    - cron: '0 8 * * *' # 每天美西时间(PST) 00:00 触发
-  workflow_dispatch: # 支持手动点击测试
+    - cron: '0 8 * * *'
+  workflow_dispatch:
 
 jobs:
   send-reminder:
     runs-on: ubuntu-latest
     steps:
-      - name: Calculate Days and Send Message
+      - name: Send Anniversary Message
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
-        run: |
-          python3 -c '
-          import os
-          from datetime import datetime, timezone, timedelta
-
-          # 设置美西时区 (PST/PDT，UTC-8)
-          pst = timezone(timedelta(hours=-8))
-          now = datetime.now(pst)
-          
-          # 纪念日起始日
-          start_date = datetime(2026, 11, 1, tzinfo=pst)
-          
-          # 计算天数差（包含起始日当天）
-          diff_days = (now.date() - start_date.date()).days + 1
-          
-          # 构造纯文本消息
-          message = f"♡ 今天是我们在一起的第 {diff_days} 天！"
-          
-          # 发送到 Discord
-          import urllib.request
-          import json
-          
-          req = urllib.request.Request(
-              os.environ["WEBHOOK_URL"],
-              data=json.dumps({"content": message}).encode("utf-8"),
-              headers={"Content-Type": "application/json"}
-          )
-          urllib.request.urlopen(req)
-          '
+        run: python3 -c 'import os, json, urllib.request; from datetime import datetime, timezone, timedelta; now = datetime.now(timezone(timedelta(hours=-8))); days = (now.date() - datetime(2026, 11, 1).date()).days + 1; req = urllib.request.Request(os.environ["WEBHOOK_URL"], data=json.dumps({"content": f"♡ 今天是我们在一起的第 {days} 天！"}).encode("utf-8"), headers={"Content-Type": "application/json"}); urllib.request.urlopen(req)'
