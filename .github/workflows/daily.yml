@@ -18,7 +18,7 @@ jobs:
         run: |
           # 计算天数差
           START_SEC=$(date -d "$START_DATE" +%s)
-          NOW_SEC=$(date -d "today" +%s)
+          NOW_SEC=$(TZ="America/Los_Angeles" date -d "today" +%s)
           DIFF_DAYS=$(( (NOW_SEC - START_SEC) / 86400 ))
 
           # 构建纯文本消息内容
