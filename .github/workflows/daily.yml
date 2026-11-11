@@ -22,7 +22,7 @@ jobs:
           start = datetime(2026, 11, 1, tzinfo=pst)
           days = (now.date() - start.date()).days + 1
 
-          payload = json.dumps({'content': f'♡ 今天是我们在一起的第 {days} 天！'}).encode('utf-8')
+          payload = json.dumps({'content': f'♥︎ 今天是我们在一起的第 {days} 天！'}).encode('utf-8')
           headers = {'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'}
           
           req = urllib.request.Request(os.environ['WEBHOOK_URL'], data=payload, headers=headers, method='POST')
