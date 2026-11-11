@@ -9,7 +9,20 @@ jobs:
   send-reminder:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Anniversary Message
+      - name: Send Message
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
-        run: python3 -c 'import os, json, urllib.request; from datetime import datetime, timezone, timedelta; now = datetime.now(timezone(timedelta(hours=-8))); days = (now.date() - datetime(2026, 11, 1).date()).days + 1; req = urllib.request.Request(os.environ["WEBHOOK_URL"], data=json.dumps({"content": f"♡ 今天是我们在一起的第 {days} 天！"}).encode("utf-8"), headers={"Content-Type": "application/json"}); urllib.request.urlopen(req)'
+        run: |
+          python3 -c "
+          import os, json, urllib.request
+          from datetime import datetime, timezone, timedelta
+
+          pst = timezone(timedelta(hours=-8))
+          now = datetime.now(pst)
+          start = datetime(2026, 11, 1, tzinfo=pst)
+          days = (now.date() - start.date()).days + 1
+
+          data = json.dumps({'content': f'♡ 今天是我们在一起的第 {days} 天！'}).encode('utf-8')
+          req = urllib.request.Request(os.environ['WEBHOOK_URL'], data=data, headers={'Content-Type': 'application/json'})
+          urllib.request.urlopen(req)
+          "
