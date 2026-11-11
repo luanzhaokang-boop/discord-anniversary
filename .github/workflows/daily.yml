@@ -22,7 +22,14 @@ jobs:
           start = datetime(2026, 11, 1, tzinfo=pst)
           days = (now.date() - start.date()).days + 1
 
-          data = json.dumps({'content': f'♡ 今天是我们在一起的第 {days} 天！'}).encode('utf-8')
-          req = urllib.request.Request(os.environ['WEBHOOK_URL'], data=data, headers={'Content-Type': 'application/json'})
-          urllib.request.urlopen(req)
+          payload = json.dumps({'content': f'♡ 今天是我们在一起的第 {days} 天！'}).encode('utf-8')
+          headers = {'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'}
+          
+          req = urllib.request.Request(os.environ['WEBHOOK_URL'], data=payload, headers=headers, method='POST')
+          try:
+              with urllib.request.urlopen(req) as response:
+                  print('Success:', response.read().decode())
+          except Exception as e:
+              print('Error:', e)
+              exit(1)
           "
