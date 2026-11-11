@@ -22,7 +22,7 @@ jobs:
           DIFF_DAYS=$(( (NOW_SEC - START_SEC) / 86400 ))
 
           # 构建纯文本消息内容
-          MESSAGE="♡ 今天是我们在一起的第 ${DIFF_DAYS} 天！"
+          MESSAGE="♥︎ 今天是我们在一起的第 ${DIFF_DAYS} 天！"
 
           # 通过 Webhook 发送纯文本
           curl -H "Content-Type: application/json" \
