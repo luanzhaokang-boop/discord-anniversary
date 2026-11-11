@@ -1,0 +1,31 @@
+name: Daily Anniversary Reminder
+
+on:
+  schedule:
+    # 每天美西时间(PST) 00:00 触发 (对应 UTC 时间 08:00)
+    - cron: '0 8 * * *'
+  workflow_dispatch: # 支持手动点击测试
+
+jobs:
+  send-reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Calculate Days and Send Message
+        shell: bash
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
+          START_DATE: "2026-11-01" # 你的纪念日起始时间 (YYYY-MM-DD)
+        run: |
+          # 计算天数差
+          START_SEC=$(date -d "$START_DATE" +%s)
+          NOW_SEC=$(date -d "today" +%s)
+          DIFF_DAYS=$(( (NOW_SEC - START_SEC) / 86400 ))
+
+          # 构建纯文本消息内容
+          MESSAGE="💖 今天是我们在一起的第 ${DIFF_DAYS} 天！"
+
+          # 通过 Webhook 发送纯文本
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "{\"content\": \"$MESSAGE\"}" \
+               $WEBHOOK_URL
