@@ -2,7 +2,7 @@ name: Daily Anniversary Reminder
 
 on:
   schedule:
-    - cron: '17 6 * * *'   # UTC 06:17 = 美西 22:17(冬) / 23:17(夏)，提前量约 1~2 小时
+    - cron: '17 6 * * *'   # UTC 06:17 = 美西 22:17(冬令时) / 23:17(夏令时)，提前触发
   workflow_dispatch:
 
 jobs:
@@ -21,15 +21,17 @@ jobs:
 
           tz = ZoneInfo('America/Los_Angeles')
           now = datetime.now(tz)
-
-          # 目标：下一个美西 0 点（如果已经过了 0 点，目标就是今天的 0 点，立刻发）
           today0 = now.replace(hour=0, minute=0, second=0, microsecond=0)
-          target = today0 + timedelta(days=1) if now.hour >= 12 else today0
 
-          wait = (target - now).total_seconds()
-          if 0 < wait < 4 * 3600:
+          if now.hour >= 20:
+              # 晚上触发：等到美西 0 点，按明天的日期算
+              target = today0 + timedelta(days=1)
+              wait = (target - now).total_seconds()
               print(f'等待 {wait:.0f} 秒到美西 0 点')
               time.sleep(wait)
+          else:
+              # 0 点之后触发（延迟）或白天手动运行：按今天的日期算，立刻发
+              target = today0
 
           start = datetime(2026, 11, 1, tzinfo=tz)
           days = (target.date() - start.date()).days + 1
