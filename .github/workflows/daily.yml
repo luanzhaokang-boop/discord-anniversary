@@ -2,29 +2,40 @@ name: Daily Anniversary Reminder
 
 on:
   schedule:
-    - cron: '0 8 * * *'
+    - cron: '17 6 * * *'   # UTC 06:17 = 美西 22:17(冬) / 23:17(夏)，提前量约 1~2 小时
   workflow_dispatch:
 
 jobs:
   send-reminder:
     runs-on: ubuntu-latest
+    timeout-minutes: 240
     steps:
       - name: Send Message
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
-          python3 -c "
-          import os, json, urllib.request
-          from datetime import datetime, timezone, timedelta
+          python3 - <<'EOF'
+          import os, json, time, urllib.request
+          from datetime import datetime, timedelta
+          from zoneinfo import ZoneInfo
 
-          pst = timezone(timedelta(hours=-8))
-          now = datetime.now(pst)
-          start = datetime(2026, 11, 1, tzinfo=pst)
-          days = (now.date() - start.date()).days + 1
+          tz = ZoneInfo('America/Los_Angeles')
+          now = datetime.now(tz)
 
-          payload = json.dumps({'content': f'♥︎ 今天是我们在一起的第 {days} 天！'}).encode('utf-8')
+          # 目标：下一个美西 0 点（如果已经过了 0 点，目标就是今天的 0 点，立刻发）
+          today0 = now.replace(hour=0, minute=0, second=0, microsecond=0)
+          target = today0 + timedelta(days=1) if now.hour >= 12 else today0
+
+          wait = (target - now).total_seconds()
+          if 0 < wait < 4 * 3600:
+              print(f'等待 {wait:.0f} 秒到美西 0 点')
+              time.sleep(wait)
+
+          start = datetime(2026, 11, 1, tzinfo=tz)
+          days = (target.date() - start.date()).days + 1
+
+          payload = json.dumps({'content': f'♥ 今天是我们在一起的第 {days} 天！'}).encode('utf-8')
           headers = {'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'}
-          
           req = urllib.request.Request(os.environ['WEBHOOK_URL'], data=payload, headers=headers, method='POST')
           try:
               with urllib.request.urlopen(req) as response:
@@ -32,4 +43,4 @@ jobs:
           except Exception as e:
               print('Error:', e)
               exit(1)
-          "
+          EOF
