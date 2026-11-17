@@ -2,8 +2,13 @@ name: Daily Anniversary Reminder
 
 on:
   schedule:
-    - cron: '17 6 * * *'   # UTC 06:17 = 美西 22:17(冬令时) / 23:17(夏令时)，提前触发
+    - cron: '17 6 * * *'   # UTC 06:17 = 美西 22:17(冬令时) / 23:17(夏令时),提前触发
   workflow_dispatch:
+
+# 同一时间只保留一个运行,新触发会取消还在等待中的旧运行,避免重复发送
+concurrency:
+  group: daily-anniversary
+  cancel-in-progress: true
 
 jobs:
   send-reminder:
@@ -24,19 +29,19 @@ jobs:
           today0 = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
           if now.hour >= 20:
-              # 晚上触发：等到美西 0 点，按明天的日期算
+              # 晚上触发:等到美西 0 点,按明天的日期算
               target = today0 + timedelta(days=1)
               wait = (target - now).total_seconds()
               print(f'等待 {wait:.0f} 秒到美西 0 点')
               time.sleep(wait)
           else:
-              # 0 点之后触发（延迟）或白天手动运行：按今天的日期算，立刻发
+              # 0 点之后触发(延迟)或白天手动运行:按今天的日期算,立刻发
               target = today0
 
           start = datetime(2026, 11, 1, tzinfo=tz)
           days = (target.date() - start.date()).days + 1
 
-          payload = json.dumps({'content': f'♥︎ 今天是我们在一起的第 16 天！ 今天是我们在一起的第 {days} 天！'}).encode('utf-8')
+          payload = json.dumps({'content': f'♥︎ 今天是我们在一起的第 {days} 天！'}).encode('utf-8')
           headers = {'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'}
           req = urllib.request.Request(os.environ['WEBHOOK_URL'], data=payload, headers=headers, method='POST')
           try:
